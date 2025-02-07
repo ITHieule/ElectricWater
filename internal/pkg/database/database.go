@@ -131,3 +131,30 @@ func RPConnection() (*gorm.DB, error) {
 	configuration.Database.Dbname = "TYX_ReportWebDB"
 	return CreateDatabaseConnection(configuration)
 }
+
+func TyThacDBConnection() (*gorm.DB, error) {
+	configuration := config.GetConfig()
+	configuration.Database.Host = "192.167.71.7"
+	configuration.Database.Username = "tyxuan"
+	configuration.Database.Password = "jack"
+	configuration.Database.Dbname = "ERP"
+	return CreateDatabaseConnection(configuration)
+}
+
+func TyXuanDBConnection() (*gorm.DB, error) {
+	configuration := config.GetConfig()
+	configuration.Database.Host = "192.167.23.9"
+	configuration.Database.Username = "tyxuan"
+	configuration.Database.Password = "Erp@admin2309"
+	configuration.Database.Dbname = "LIY_ERP"
+	return CreateDatabaseConnection(configuration)
+}
+
+func TyBachDBConnection() (*gorm.DB, error) {
+	configuration := config.GetConfig()
+	configuration.Database.Host = "192.167.40.9"
+	configuration.Database.Username = "tyx"
+	configuration.Database.Password = "tyx"
+	configuration.Database.Dbname = "ERP"
+	return CreateDatabaseConnection(configuration)
+}
