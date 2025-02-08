@@ -7,5 +7,5 @@ import (
 )
 
 func RegisterFactoriesRouter(router *gin.RouterGroup) {
-	router.GET("/Getfactories", controllers.Factories.Getfactories)
+	router.GET("/get", controllers.Factories.Getfactories)
 }

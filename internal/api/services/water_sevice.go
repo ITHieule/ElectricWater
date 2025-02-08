@@ -259,19 +259,19 @@ func (s *WaterRecordsService) SearchWaterRecordSevice(requestParams *request.Wat
 	var queryParams []interface{}
 
 	if requestParams.FactoryID != "" {
-		query += " AND FactoryID = ?"
+		query += " OR FactoryID = ?"
 		queryParams = append(queryParams, requestParams.FactoryID)
 	}
 	if requestParams.RecordYear != 0 {
-		query += " AND RecordYear = ?"
+		query += " OR RecordYear = ?"
 		queryParams = append(queryParams, requestParams.RecordYear)
 	}
 	if requestParams.RecordMonth != 0 {
-		query += " AND RecordMonth = ?"
+		query += " OR RecordMonth = ?"
 		queryParams = append(queryParams, requestParams.RecordMonth)
 	}
 	if requestParams.UserID != "" {
-		query += " AND UserID = ?"
+		query += " OR UserID = ?"
 		queryParams = append(queryParams, requestParams.UserID)
 	}
 
