@@ -1,8 +1,6 @@
 package router_v1
 
 import (
-	"web-api/internal/api/controllers"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,5 +13,8 @@ func Register(router *gin.Engine) {
 
 	RegisterAdminRouter(v1.Group("/rp/admin"))
 
-	v1.POST("/auth/login", controllers.Login)
+	RegisterElectricRouter(v1.Group("/System"))
+
+	RegisterAuthRouter(v1.Group("/auth"))
+
 }

@@ -167,6 +167,15 @@ func TyBachDBConnection() (*gorm.DB, error) {
 	return CreateDatabaseConnection(configuration)
 }
 
+func ElectricWaterDBConnection() (*gorm.DB, error) {
+	configuration := config.GetConfig()
+	configuration.Database.Host = "192.168.40.104"
+	configuration.Database.Username = "test"
+	configuration.Database.Password = "passtest"
+	configuration.Database.Dbname = "ElectricWaterDB"
+	return CreateDatabaseConnection(configuration)
+}
+
 func SelectDB(dbChoice string) (*gorm.DB, error) {
 	switch dbChoice {
 	case "TyThac":
