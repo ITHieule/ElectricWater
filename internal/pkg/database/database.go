@@ -125,28 +125,34 @@ func GetDB() *gorm.DB {
 
 func RPConnection() (*gorm.DB, error) {
 	configuration := config.GetConfig()
+	configuration.Database.Driver = "sqlserver"
 	configuration.Database.Host = "192.168.23.122"
 	configuration.Database.Username = "tyxuan"
 	configuration.Database.Password = "Erp@admin2309"
 	configuration.Database.Dbname = "TYX_ReportWebDB"
+	configuration.Database.Port = "1433"
 	return CreateDatabaseConnection(configuration)
 }
 
 func TyThacDBConnection() (*gorm.DB, error) {
 	configuration := config.GetConfig()
+	configuration.Database.Driver = "sqlserver"
 	configuration.Database.Host = "192.168.71.7"
 	configuration.Database.Username = "tyxuan"
 	configuration.Database.Password = "jack"
 	configuration.Database.Dbname = "ERP"
+	configuration.Database.Port = "1433"
 	return CreateDatabaseConnection(configuration)
 }
 
 func TyXuanDBConnection() (*gorm.DB, error) {
 	configuration := config.GetConfig()
+	configuration.Database.Driver = "sqlserver"
 	configuration.Database.Host = "192.168.23.9"
 	configuration.Database.Username = "tyxuan"
 	configuration.Database.Password = "Erp@admin2309"
 	configuration.Database.Dbname = "LIY_ERP"
+	configuration.Database.Port = "1433"
 	return CreateDatabaseConnection(configuration)
 }
 
