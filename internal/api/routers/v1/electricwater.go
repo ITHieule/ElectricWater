@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterElectricRouter(router *gin.RouterGroup) {
+func RegisterelectricRouter(router *gin.RouterGroup) {
 
 	router.GET("/GetEnergyRecords", controllers.EnergyRecords.GetEnergyRecords)
 	router.POST("/AddEnergyRecords", controllers.EnergyRecords.AddEnergyRecords)

@@ -1,0 +1,26 @@
+
+2025/02/08 10:23:32 D:/ElectricWaterDB/internal/api/services/water_sevice.go:31 sql: Scan error on column index 1, name "FactoryID": converting driver.Value type []uint8 ("LYN") to a int: invalid syntax; sql: Scan error on column index 1, name "FactoryID": converting driver.Value type []uint8 ("LYV") to a int: invalid syntax; sql: Scan error on column index 1, name "FactoryID": converting driver.Value type []uint8 ("LYS") to a int: invalid syntax; sql: Scan error on column index 1, name "FactoryID": converting driver.Value type []uint8 ("LYN") to a int: invalid syntax; sql: Scan error on column index 1, name "FactoryID": converting driver.Value type []uint8 ("LYV") to a int: invalid syntax
+[2.405ms] [rows:5] SELECT * FROM WaterRecords
+
+2025/02/08 10:26:37 D:/ElectricWaterDB/internal/api/services/water_sevice.go:31
+[0.881ms] [rows:5] SELECT * FROM WaterRecords
+
+2025/02/08 10:27:55 D:/ElectricWaterDB/internal/api/services/water_sevice.go:62
+[5.913ms] [rows:1] 
+		INSERT INTO WaterRecords (
+			FactoryID, RecordYear, RecordMonth, TapWaterMeter, RecycledWaterMeter, UserID, UserDate
+		) VALUES ('LYN', 2024, 1, 150.500000, 150.200000, 'U00006', '2025-02-07 22:22:48')
+	
+
+2025/02/08 10:28:51 D:/ElectricWaterDB/internal/api/services/water_sevice.go:105
+[3.862ms] [rows:1] 
+		UPDATE WaterRecords
+		SET FactoryID = 'LYN', RecordYear = 2026, RecordMonth = 7, TapWaterMeter = 150.500000, RecycledWaterMeter = 150.200000, UserID = 'U00006', UserDate = '2025-02-07 22:22:48'
+		WHERE RecordID = 6
+	
+
+2025/02/08 10:29:32 D:/ElectricWaterDB/internal/api/services/water_sevice.go:192
+[2.491ms] [rows:1] SELECT * FROM WaterRecords WHERE 1=1 AND UserID = 'U00006'
+
+2025/02/08 10:29:50 D:/ElectricWaterDB/internal/api/services/water_sevice.go:141
+[4.677ms] [rows:1] DELETE FROM WaterRecords WHERE RecordID = 6

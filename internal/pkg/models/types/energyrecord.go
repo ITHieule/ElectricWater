@@ -3,8 +3,8 @@ package types
 import "time"
 type EnergyRecord struct {
 
-	RecordID            int       `json:"recordid"`
-	FactoryID           int       `json:"factoryid"`
+	RecordID            string       `json:"recordid"`
+	FactoryID           string       `json:"factoryid"`
 	RecordYear          int       `json:"recordyear"`
 	RecordMonth         int       `json:"recordmonth"`
 	GridElectricityMeter float64  `json:"grid_electricity_meter"`
