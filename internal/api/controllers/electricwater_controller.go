@@ -18,10 +18,10 @@ type ElectricController struct {
 var EnergyRecords = &ElectricController{}
 
 func (c *ElectricController) GetEnergyRecords(ctx *gin.Context) {
-	result, err := services.Energy.IceLevelsSevice()
+	result, err := services.Energy.GetEnergySevice()
 	if err != nil {
 		// Log lỗi chi tiết để dễ dàng kiểm tra trong hệ thống
-		fmt.Println("Error in IceLevelsSevice:", err)
+		fmt.Println("Error in GetEnergySevice:", err)
 		response.FailWithDetailed(ctx, http.StatusInternalServerError, nil, "Failed to get energy records: "+err.Error())
 		return
 	}

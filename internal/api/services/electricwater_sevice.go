@@ -16,7 +16,7 @@ type ElectricWaterService struct {
 
 var Energy = &ElectricWaterService{}
 
-func (s *ElectricWaterService) IceLevelsSevice() ([]types.EnergyRecord, error) {
+func (s *ElectricWaterService) GetEnergySevice() ([]types.EnergyRecord, error) {
 	var Ener []types.EnergyRecord
 
 	// Kết nối databaser
@@ -53,7 +53,7 @@ func (s *ElectricWaterService) AddEnergySevice(requestParams *request.Energyrequ
 	fmt.Printf("🔍 Request Params: %+v\n", requestParams)
 
 	// 🛠 Tạo RecordID theo format "W" + FactoryID + Năm + Tháng
-	recordID := fmt.Sprintf("W%s%d%02d", requestParams.FactoryID, requestParams.RecordYear, requestParams.RecordMonth)
+	recordID := fmt.Sprintf("E%s%d%02d", requestParams.FactoryID, requestParams.RecordYear, requestParams.RecordMonth)
 
 	// 🛠 Load múi giờ Việt Nam
 	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
