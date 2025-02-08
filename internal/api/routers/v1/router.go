@@ -13,11 +13,11 @@ func Register(router *gin.Engine) {
 
 	RegisterAdminRouter(v1.Group("/rp/admin"))
 
-	RegisterelectricRouter(v1.Group("/energyrecords"))
+	RegisterelectricRouter(v1.Group("/energy"))
 
 	RegisterFactoriesRouter(v1.Group("/factories"))
 
-	RegisterwaterRouter(v1.Group("/waterrecords"))
+	RegisterwaterRouter(v1.Group("/water"))
 
 	RegisterAuthRouter(v1.Group("/auth"))
 

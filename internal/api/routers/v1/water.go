@@ -7,9 +7,9 @@ import (
 )
 
 func RegisterwaterRouter(router *gin.RouterGroup) {
-	router.GET("/getwater", controllers.Water.Getwater)
-	router.POST("/addwater", controllers.Water.AddWaterRecords)
-	router.PUT("/updatewater", controllers.Water.UpdateWaterRecords)
-	router.DELETE("/deletewater", controllers.Water.DeleteWaterRecords)
-	router.POST("/searchwater", controllers.Water.SearchWaterRecords)
+	router.GET("/get", controllers.Water.Getwater)
+	router.POST("/add", controllers.Water.AddWaterRecords)
+	router.PUT("/updat", controllers.Water.UpdateWaterRecords)
+	router.DELETE("/delete", controllers.Water.DeleteWaterRecords)
+	router.POST("/search", controllers.Water.SearchWaterRecords)
 }

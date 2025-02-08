@@ -150,20 +150,37 @@ func (s *ElectricWaterService) AddEnergySevice(requestParams *request.Energyrequ
 func (s *ElectricWaterService) UpdateEnergySevice(requestParams *request.Energyrequest) ([]types.EnergyRecord, error) {
 	var Ener []types.EnergyRecord
 
-	// Load múi giờ Việt Nam
-	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
-	currentTime := time.Now().In(loc)
-
-	// Kết nối database
+	// 🛠 Kiểm tra xem RecordID có tồn tại không
+	var recordCount int
 	db, err := database.ElectricWaterDBConnection()
 	if err != nil {
-		fmt.Println("Database connection error:", err)
+		fmt.Println("❌ Database connection error:", err)
 		return nil, err
 	}
 	dbInstance, _ := db.DB()
 	defer dbInstance.Close()
 
-	// Truy vấn SQL
+	checkRecordQuery := `SELECT COUNT(*) FROM EnergyRecords WHERE RecordID = ?`
+	if err := db.Raw(checkRecordQuery, requestParams.RecordID).Scan(&recordCount).Error; err != nil {
+		fmt.Println("❌ Error checking RecordID:", err)
+		return nil, err
+	}
+
+	if recordCount == 0 {
+		errMsg := fmt.Sprintf("❌ RecordID '%s' không tồn tại. Không thể cập nhật!", requestParams.RecordID)
+		fmt.Println(errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	// 🛠 Load múi giờ Việt Nam
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err != nil {
+		fmt.Println("❌ Error loading time location:", err)
+		return nil, err
+	}
+	currentTime := time.Now().In(loc).Format("2006-01-02 15:04:05") // 🔹 Định dạng cho MySQL DATETIME
+
+	// 🛠 Cập nhật dữ liệu
 	query := `
 		UPDATE EnergyRecords SET 
 			FactoryID = ?, RecordYear = ?, RecordMonth = ?, 
@@ -172,8 +189,7 @@ func (s *ElectricWaterService) UpdateEnergySevice(requestParams *request.Energyr
 		WHERE RecordID = ?
 	`
 
-	// Thực hiện câu lệnh cập nhật
-	if err := db.Exec(query,
+	result := db.Exec(query,
 		requestParams.FactoryID,
 		requestParams.RecordYear,
 		requestParams.RecordMonth,
@@ -181,12 +197,30 @@ func (s *ElectricWaterService) UpdateEnergySevice(requestParams *request.Energyr
 		requestParams.SolarEnergyMeter,
 		requestParams.UserID,
 		currentTime,
-		requestParams.RecordID).Error; err != nil {
-		fmt.Println("Query execution error:", err)
+		requestParams.RecordID,
+	)
+
+	// 🛠 Kiểm tra lỗi truy vấn
+	if result.Error != nil {
+		fmt.Println("❌ Query execution error:", result.Error)
+		return nil, result.Error
+	}
+
+	// 🛠 Kiểm tra xem có dữ liệu nào được cập nhật không
+	if result.RowsAffected == 0 {
+		errMsg := "❌ Không có bản ghi nào được cập nhật. Có thể dữ liệu không thay đổi!"
+		fmt.Println(errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	// 🛠 Lấy dữ liệu vừa cập nhật từ database
+	querySelect := `SELECT * FROM EnergyRecords WHERE RecordID = ?`
+	if err := db.Raw(querySelect, requestParams.RecordID).Scan(&Ener).Error; err != nil {
+		fmt.Println("❌ Error fetching updated record:", err)
 		return nil, err
 	}
 
-	// Kiểm tra việc cập nhật thành công
+	fmt.Println("✅ Cập nhật dữ liệu thành công vào EnergyRecords!")
 	return Ener, nil
 }
 
