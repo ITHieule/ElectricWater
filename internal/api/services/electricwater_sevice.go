@@ -2,9 +2,12 @@ package services
 
 import (
 	"fmt"
+	"time"
 	"web-api/internal/pkg/database"
 	"web-api/internal/pkg/models/request"
 	"web-api/internal/pkg/models/types"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type ElectricWaterService struct {
@@ -43,45 +46,113 @@ func (s *ElectricWaterService) IceLevelsSevice() ([]types.EnergyRecord, error) {
 	return Ener, nil
 }
 
-func (s *ElectricWaterService) AddFlavorsSevice(requestParams *request.Energyrequest) ([]types.EnergyRecord, error) {
+func (s *ElectricWaterService) AddEnergySevice(requestParams *request.Energyrequest) ([]types.EnergyRecord, error) {
 	var Ener []types.EnergyRecord
 
-	// Kết nối database
+	// 🛠 Debug đầu vào
+	fmt.Printf("🔍 Request Params: %+v\n", requestParams)
+
+	// 🛠 Tạo RecordID theo format "W" + FactoryID + Năm + Tháng
+	recordID := fmt.Sprintf("W%s%d%02d", requestParams.FactoryID, requestParams.RecordYear, requestParams.RecordMonth)
+
+	// 🛠 Load múi giờ Việt Nam
+	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+	currentTime := time.Now().In(loc).Format("2006-01-02 15:04:05") // 🔹 Định dạng phù hợp với MySQL DATETIME
+
+	// 🛠 Kết nối database
 	db, err := database.ElectricWaterDBConnection()
 	if err != nil {
-		fmt.Println("Database connection error:", err)
+		fmt.Println("❌ Database connection error:", err)
 		return nil, err
 	}
 	dbInstance, _ := db.DB()
 	defer dbInstance.Close()
 
-	// Truy vấn SQL
-	query := `
-		INSERT INTO EnergyRecords (
-			RecordID,FactoryID, RecordYear, RecordMonth, GridElectricityMeter, 
-			SolarEnergyMeter, UserID, UserDate
-		) VALUES (?, ?, ?, ?, ?, ?, ?)
-	`
+	// 🛠 Kiểm tra xem FactoryID có tồn tại trong bảng Factories không
+	var factoryCount int
+	checkFactoryQuery := `SELECT COUNT(*) FROM Factories WHERE FactoryID = ?`
+	if err := db.Raw(checkFactoryQuery, requestParams.FactoryID).Scan(&factoryCount).Error; err != nil {
+		fmt.Println("❌ Error checking FactoryID:", err)
+		return nil, err
+	}
 
-	// Thực hiện truy vấn với tham số
-	if err := db.Exec(query, 
+	if factoryCount == 0 {
+		errMsg := fmt.Sprintf("❌ FactoryID '%s' không tồn tại trong bảng Factories.", requestParams.FactoryID)
+		fmt.Println(errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	// 🛠 Kiểm tra giá trị đầu vào
+	fmt.Printf("⚡ GridElectricityMeter: %v, SolarEnergyMeter: %v\n", requestParams.GridElectricityMeter, requestParams.SolarEnergyMeter)
+
+	// 🛠 Kiểm tra xem RecordID đã tồn tại chưa (Tránh lỗi trùng khóa)
+	var existingCount int
+	checkRecordQuery := `SELECT COUNT(*) FROM EnergyRecords WHERE RecordID = ?`
+	if err := db.Raw(checkRecordQuery, recordID).Scan(&existingCount).Error; err != nil {
+		fmt.Println("❌ Error checking existing RecordID:", err)
+		return nil, err
+	}
+
+	if existingCount > 0 {
+		errMsg := fmt.Sprintf("❌ RecordID '%s' đã tồn tại. Vui lòng không thêm trùng.", recordID)
+		fmt.Println(errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	// 🛠 Thực hiện truy vấn INSERT
+	query := `
+        INSERT INTO EnergyRecords (
+            RecordID, FactoryID, RecordYear, RecordMonth, GridElectricityMeter, 
+            SolarEnergyMeter, UserID, UserDate
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `
+
+	result := db.Exec(query,
+		recordID,
 		requestParams.FactoryID,
 		requestParams.RecordYear,
 		requestParams.RecordMonth,
 		requestParams.GridElectricityMeter,
 		requestParams.SolarEnergyMeter,
 		requestParams.UserID,
-		requestParams.UserDate).Error; err != nil {
-		fmt.Println("Query execution error:", err)
+		currentTime, // 🔹 Chuyển thành chuỗi "YYYY-MM-DD HH:MM:SS"
+	)
+
+	// 🛠 Kiểm tra lỗi truy vấn
+	if result.Error != nil {
+		if mysqlErr, ok := result.Error.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+			errMsg := fmt.Sprintf("❌ Lỗi trùng khóa chính: RecordID '%s' đã tồn tại.", recordID)
+			fmt.Println(errMsg)
+			return nil, fmt.Errorf(errMsg)
+		}
+		fmt.Println("❌ Query execution error:", result.Error)
+		return nil, result.Error
+	}
+
+	// 🛠 Kiểm tra xem có dữ liệu được thêm không
+	if result.RowsAffected == 0 {
+		errMsg := "❌ Không có bản ghi nào được thêm vào."
+		fmt.Println(errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	// 🛠 Lấy dữ liệu vừa thêm từ database
+	querySelect := `SELECT * FROM EnergyRecords WHERE RecordID = ?`
+	if err := db.Raw(querySelect, recordID).Scan(&Ener).Error; err != nil {
+		fmt.Println("❌ Error fetching inserted record:", err)
 		return nil, err
 	}
 
-	// Kiểm tra việc thêm dữ liệu thành công
+	fmt.Println("✅ Thêm dữ liệu thành công vào EnergyRecords!")
 	return Ener, nil
 }
 
 func (s *ElectricWaterService) UpdateEnergySevice(requestParams *request.Energyrequest) ([]types.EnergyRecord, error) {
 	var Ener []types.EnergyRecord
+
+	// Load múi giờ Việt Nam
+	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+	currentTime := time.Now().In(loc)
 
 	// Kết nối database
 	db, err := database.ElectricWaterDBConnection()
@@ -109,7 +180,7 @@ func (s *ElectricWaterService) UpdateEnergySevice(requestParams *request.Energyr
 		requestParams.GridElectricityMeter,
 		requestParams.SolarEnergyMeter,
 		requestParams.UserID,
-		requestParams.UserDate,
+		currentTime,
 		requestParams.RecordID).Error; err != nil {
 		fmt.Println("Query execution error:", err)
 		return nil, err

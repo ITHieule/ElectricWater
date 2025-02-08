@@ -3,9 +3,12 @@ package services
 import (
 	"errors"
 	"fmt"
+	"time"
 	"web-api/internal/pkg/database"
 	"web-api/internal/pkg/models/request"
 	"web-api/internal/pkg/models/types"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type WaterRecordsService struct {
@@ -45,6 +48,13 @@ func (s *WaterRecordsService) AddWaterRecordSevice(requestParams *request.Waterr
 		return nil, errors.New("dữ liệu không hợp lệ, thiếu FactoryID, RecordYear hoặc RecordMonth")
 	}
 
+	// Tạo RecordID theo format "W" + FactoryID + Năm + Tháng
+	recordID := fmt.Sprintf("W%s%d%02d", requestParams.FactoryID, requestParams.RecordYear, requestParams.RecordMonth)
+
+	// Load múi giờ Việt Nam
+	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+	currentTime := time.Now().In(loc)
+
 	// Kết nối database
 	db, err := database.ElectricWaterDBConnection()
 	if err != nil {
@@ -53,23 +63,28 @@ func (s *WaterRecordsService) AddWaterRecordSevice(requestParams *request.Waterr
 	dbInstance, _ := db.DB()
 	defer dbInstance.Close()
 
-	// Chạy câu lệnh INSERT
+	// 🔹 Thực hiện INSERT và xử lý lỗi trùng RecordID
 	query := `
 		INSERT INTO WaterRecords (
-			FactoryID, RecordYear, RecordMonth, TapWaterMeter, RecycledWaterMeter, UserID, UserDate
-		) VALUES (?, ?, ?, ?, ?, ?, ?)
+			RecordID, FactoryID, RecordYear, RecordMonth, TapWaterMeter, RecycledWaterMeter, UserID, UserDate
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	result := db.Exec(query,
+		recordID,
 		requestParams.FactoryID,
 		requestParams.RecordYear,
 		requestParams.RecordMonth,
 		requestParams.TapWaterMeter,
 		requestParams.RecycledWaterMeter,
 		requestParams.UserID,
-		requestParams.UserDate,
+		currentTime,
 	)
 
 	if result.Error != nil {
+		// Xử lý lỗi Duplicate Entry (1062)
+		if mysqlErr, ok := result.Error.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+			return nil, fmt.Errorf("RecordID %s đã tồn tại, không thể thêm mới", recordID)
+		}
 		return nil, fmt.Errorf("lỗi khi thêm bản ghi: %w", result.Error)
 	}
 	if result.RowsAffected == 0 {
@@ -88,6 +103,10 @@ func (s *WaterRecordsService) UpdateWaterRecordSevice(requestParams *request.Wat
 		return nil, errors.New("thiếu RecordID, không thể cập nhật")
 	}
 
+	// 🛠 Load múi giờ Việt Nam
+	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+	currentTime := time.Now().In(loc).Format("2006-01-02 15:04:05") // 🔹 Định dạng phù hợp với MySQL DATETIME
+
 	// Kết nối database
 	db, err := database.ElectricWaterDBConnection()
 	if err != nil {
@@ -99,7 +118,8 @@ func (s *WaterRecordsService) UpdateWaterRecordSevice(requestParams *request.Wat
 	// Chạy câu lệnh UPDATE
 	query := `
 		UPDATE WaterRecords
-		SET FactoryID = ?, RecordYear = ?, RecordMonth = ?, TapWaterMeter = ?, RecycledWaterMeter = ?, UserID = ?, UserDate = ?
+		SET FactoryID = ?, RecordYear = ?, RecordMonth = ?, TapWaterMeter = ?, 
+			RecycledWaterMeter = ?, UserID = ?, UserDate = ?
 		WHERE RecordID = ?
 	`
 	result := db.Exec(query,
@@ -109,7 +129,7 @@ func (s *WaterRecordsService) UpdateWaterRecordSevice(requestParams *request.Wat
 		requestParams.TapWaterMeter,
 		requestParams.RecycledWaterMeter,
 		requestParams.UserID,
-		requestParams.UserDate,
+		currentTime,
 		requestParams.RecordID,
 	)
 
@@ -117,7 +137,7 @@ func (s *WaterRecordsService) UpdateWaterRecordSevice(requestParams *request.Wat
 		return nil, fmt.Errorf("lỗi khi cập nhật bản ghi: %w", result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return nil, errors.New("không tìm thấy bản ghi để cập nhật")
+		return nil, errors.New("không tìm thấy bản ghi để cập nhật hoặc dữ liệu không thay đổi")
 	}
 
 	return records, nil
@@ -144,7 +164,7 @@ func (s *WaterRecordsService) DeleteWaterRecordSevice(RecordID string) error {
 		return fmt.Errorf("lỗi khi xóa bản ghi: %w", result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("không tìm thấy bản ghi với ID %d để xóa", RecordID)
+		return fmt.Errorf("không tìm thấy bản ghi với ID %s để xóa", RecordID)
 	}
 
 	return nil
@@ -167,7 +187,7 @@ func (s *WaterRecordsService) SearchWaterRecordSevice(requestParams *request.Wat
 	dbInstance, _ := db.DB()
 	defer dbInstance.Close()
 
-	// Xây dựng câu truy vấn động dựa trên các tham số đầu vào
+	// Xây dựng câu truy vấn động
 	query := "SELECT * FROM WaterRecords WHERE 1=1"
 	var queryParams []interface{}
 

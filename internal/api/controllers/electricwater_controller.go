@@ -45,7 +45,7 @@ func (c *ElectricController) AddEnergyRecords(ctx *gin.Context) {
 		return
 	}
 
-	result, err := services.Energy.AddFlavorsSevice(&requestParams)
+	result, err := services.Energy.AddEnergySevice(&requestParams)
 	if err != nil {
 		// Log lỗi chi tiết để dễ dàng kiểm tra trong hệ thống
 		fmt.Println("Error in AddFlavorsSevice:", err)
