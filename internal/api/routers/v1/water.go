@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterwaterRouter(router *gin.RouterGroup) {
+func RegisterWaterRouter(router *gin.RouterGroup) {
 	router.GET("/get", controllers.Water.Getwater)
 	router.POST("/add", controllers.Water.AddWaterRecords)
 	router.PUT("/updat", controllers.Water.UpdateWaterRecords)
