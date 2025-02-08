@@ -19,15 +19,18 @@ func Login(c *gin.Context) {
 	}
 
 	// Gọi hàm xác thực user
-	isAuthenticated, err := services.AuthenticateUser(buser)
+	authenticatedUser, err := services.AuthenticateUser(buser)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	if isAuthenticated {
-		c.JSON(http.StatusOK, gin.H{"message": "Đăng nhập thành công"})
-	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Sai thông tin đăng nhập"})
-	}
+	// Trả về thông tin user sau khi xác thực thành công
+	c.JSON(http.StatusOK, gin.H{
+		"data": gin.H{
+			"message":   "Đăng nhập thành công",
+			"USERID":    authenticatedUser.UserID,
+			"DB_CHOICE": authenticatedUser.DBChoice,
+		},
+	})
 }

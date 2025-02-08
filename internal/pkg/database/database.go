@@ -140,7 +140,7 @@ func TyThacDBConnection() (*gorm.DB, error) {
 	configuration.Database.Host = "192.168.71.7"
 	configuration.Database.Username = "tyxuan"
 	configuration.Database.Password = "jack"
-	configuration.Database.Dbname = "ERP"
+	configuration.Database.Dbname = "LYS_ERP"
 	configuration.Database.Port = "1433"
 	return CreateDatabaseConnection(configuration)
 }
