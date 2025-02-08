@@ -176,15 +176,18 @@ func ElectricWaterDBConnection() (*gorm.DB, error) {
 	return CreateDatabaseConnection(configuration)
 }
 
-func SelectDB(dbChoice string) (*gorm.DB, error) {
-	switch dbChoice {
-	case "TyThac":
-		return TyThacDBConnection()
-	case "TyXuan":
-		return TyXuanDBConnection()
-	case "TyBach":
-		return TyBachDBConnection()
-	default:
-		return nil, errors.New("Database không hợp lệ")
+func SelectDB(factoryID string) (*gorm.DB, error) {
+	// Ánh xạ FactoryID đến database tương ứng
+	dbMapping := map[string]func() (*gorm.DB, error){
+		"LYS": TyThacDBConnection,
+		"LYN": TyXuanDBConnection,
+		"LYV": TyBachDBConnection,
 	}
+
+	// Kiểm tra FactoryID có hợp lệ không
+	if dbFunc, exists := dbMapping[factoryID]; exists {
+		return dbFunc()
+	}
+
+	return nil, errors.New("FactoryID không hợp lệ, không tìm thấy database phù hợp")
 }
