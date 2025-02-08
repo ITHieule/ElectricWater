@@ -134,7 +134,7 @@ func RPConnection() (*gorm.DB, error) {
 
 func TyThacDBConnection() (*gorm.DB, error) {
 	configuration := config.GetConfig()
-	configuration.Database.Host = "192.167.71.7"
+	configuration.Database.Host = "192.168.71.7"
 	configuration.Database.Username = "tyxuan"
 	configuration.Database.Password = "jack"
 	configuration.Database.Dbname = "ERP"
@@ -143,7 +143,7 @@ func TyThacDBConnection() (*gorm.DB, error) {
 
 func TyXuanDBConnection() (*gorm.DB, error) {
 	configuration := config.GetConfig()
-	configuration.Database.Host = "192.167.23.9"
+	configuration.Database.Host = "192.168.23.9"
 	configuration.Database.Username = "tyxuan"
 	configuration.Database.Password = "Erp@admin2309"
 	configuration.Database.Dbname = "LIY_ERP"
@@ -152,9 +152,24 @@ func TyXuanDBConnection() (*gorm.DB, error) {
 
 func TyBachDBConnection() (*gorm.DB, error) {
 	configuration := config.GetConfig()
-	configuration.Database.Host = "192.167.40.9"
+	configuration.Database.Driver = "sqlserver"
+	configuration.Database.Host = "192.168.40.9"
 	configuration.Database.Username = "tyx"
 	configuration.Database.Password = "tyx"
-	configuration.Database.Dbname = "ERP"
+	configuration.Database.Dbname = "TB_ERP"
+	configuration.Database.Port = "1433"
 	return CreateDatabaseConnection(configuration)
+}
+
+func SelectDB(dbChoice string) (*gorm.DB, error) {
+	switch dbChoice {
+	case "TyThac":
+		return TyThacDBConnection()
+	case "TyXuan":
+		return TyXuanDBConnection()
+	case "TyBach":
+		return TyBachDBConnection()
+	default:
+		return nil, errors.New("Database không hợp lệ")
+	}
 }
